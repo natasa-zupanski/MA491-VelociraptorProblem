@@ -7,3 +7,7 @@ To Run:
 - Cd into src
 - run activate script in your environment
 - python main.py
+
+Note:
+
+You need to add tensorflow yourself because some of it's files are too large to be commited to github. So we each need a personal copy.
