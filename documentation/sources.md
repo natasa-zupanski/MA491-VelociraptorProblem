@@ -1,4 +1,6 @@
 
+https://www.youtube.com/watch?v=1y8RM4pzM0s
+
 [source 1](https://machinelearningmastery.com/three-ways-to-build-machine-learning-models-in-keras/)
 - Basic overview of how to make models.
 
