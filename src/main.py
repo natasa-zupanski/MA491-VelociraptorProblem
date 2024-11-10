@@ -3,22 +3,23 @@ from tensorflow.keras import Sequential
 
 class Constants :
     time-step = 0.01
+    inp-size = (8,1,1)
 
 
 class Main:
 
     def runMain(loadFile, saveFile) :
         model = None
+        constants = Constants()
+        
         if (loadFile == None or len(loadFile) == 0) :
             # create new model
-            model = Sequential([
-                Input(shape=(32,32,3,)),
-                Conv2D(filters=6, kernel_size=(5,5), padding="same", activation="relu"),
-                MaxPool2D(pool_size=(2,2)),
-                Conv2D(filters=16, kernel_size=(5,5), padding="same", activation="relu"),
-                MaxPool2D(pool_size=(2, 2)),
-                Conv2D(filters=120, kernel_size=(5,5), padding="same", activation="relu"),
-                Flatten(),
+            predator = Sequential([
+                Dense(units=84, activation="relu"),
+                Dense(units=10, activation="softmax"),
+            ])
+            
+            prey = Sequential([
                 Dense(units=84, activation="relu"),
                 Dense(units=10, activation="softmax"),
             ])
