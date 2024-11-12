@@ -6,3 +6,6 @@ https://www.youtube.com/watch?v=1y8RM4pzM0s
 
 [source 2](https://stackoverflow.com/questions/49100556/what-is-the-use-of-train-on-batch-in-keras)
 - Mentions `.train_on_batch()` which we can use to train on multiple runs manually.
+
+[source 3](https://www.digitalocean.com/community/tutorials/implementing-gans-in-tensorflow)
+- look at GAN for idea on how backpropgate
