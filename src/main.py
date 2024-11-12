@@ -14,10 +14,11 @@ class Constants:
 class Main:
     
     def runRound(self, predator, prey, trials) :
-        lil = None
+        for i in range(trials):
+            self.runTrial(self, predator, prey)
         
 
-    def runMain(self, loadFile, saveFile, rounds) :
+    def runMain(self, loadFile, saveFile, trials) :
 
         constants = Constants()
        # print(tf._kernel_dir.)
@@ -27,20 +28,22 @@ class Main:
             predator = Sequential([
                 Input(shape=constants.inp_size),
                 Dense(units=84, activation="relu"),
-                Dense(units=10, activation="softmax"),
+                Dense(units=60, activation="relu"),
+                Dense(units=2, activation="relu"),
             ])
             
             prey = Sequential([
                 Input(shape=constants.inp_size),
                 Dense(units=84, activation="relu"),
-                Dense(units=10, activation="softmax"),
+                Dense(units=60, activation="relu"),
+                Dense(units=2, activation="relu"),
             ])
 
         else :
             # load old model
             model = None
             
-        self.runRound(predator, prey, rounds)
+        self.runRound(predator, prey, trials)
         
         
 main = Main()
