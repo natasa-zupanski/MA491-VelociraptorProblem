@@ -1,5 +1,14 @@
 To Install:
+
 [video](https://www.youtube.com/watch?v=1y8RM4pzM0s)
+
+Open command prompt:
+- python -m venv myenv
+- myenv\Scripts\activate
+- pip install tensorflow
+- in search bar
+    - >python: Select Interpreter
+    - select myenv
 
 To Run:
 - Open Terminal

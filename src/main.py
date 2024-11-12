@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras import Sequential
+
 
 # class Constants :
 #     time-step = 0.01
@@ -7,10 +7,12 @@ from tensorflow.keras import Sequential
 
 
 class Main:
+    
+    def runRound(self, predator, prey) :
+        lil = None
 
-    def runMain(loadFile, saveFile) :
+    def runMain(self, loadFile, saveFile) :
         model = None
-        print("Fuck")
         # constants = Constants()
         
         # if (loadFile == None or len(loadFile) == 0) :
@@ -28,7 +30,9 @@ class Main:
         # else :
         #     # load old model
         #     model = None
+        # print("WH")  
+        #runRound(predator, prey)
         
         
 main = Main()
-main.runMain(None, None)
+main.runMain(1,2)
