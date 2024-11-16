@@ -9,3 +9,6 @@ https://www.youtube.com/watch?v=1y8RM4pzM0s
 
 [source 3](https://www.digitalocean.com/community/tutorials/implementing-gans-in-tensorflow)
 - look at GAN for idea on how backpropgate
+
+[source 4](https://huggingface.co/learn/deep-rl-course/en/unit7/self-play)
+- ELO for training.
