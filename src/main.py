@@ -35,9 +35,9 @@ class Dinosaur:
 
         self.speed = np.sqrt(self.turn_radius*self.acceleration)
         
-        self.speed += self.acceleration*self.constants.time_step
-        self.location[0] += self.velocity*self.constants.time_step*np.cos(self.direction)
-        self.location[1] += self.velocity*self.constants.time_step*np.sin(self.direction)
+        self.speed += self.acceleration*constants.time_step
+        self.location[0] += self.speed*constants.time_step*np.cos(self.direction)
+        self.location[1] += self.speed*constants.time_step*np.sin(self.direction)
         
     def model(self, X, hsize=[84, 60, 16]) :
         hs = []
@@ -110,6 +110,9 @@ class Main:
             prey_predict = prey(info)
             past_prey_preds.append(prey_predict)
             print("M")
+            print(pred_predict)
+            pred_predict = np.array(pred_predict).flatten()
+            prey_predict = np.array(prey_predict).flatten()
             m.advanceModel(pred_predict, prey_predict)
         if m.endConditionsMet() == 1 :
             # prey won
