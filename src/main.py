@@ -12,6 +12,7 @@ class Constants:
     thes_v_max = 50*1000/3600
     velo_tr_min = 1.5
     thes_tr_min = 0.5
+    reach = 0.8
     
 constants = Constants()
 
@@ -66,11 +67,14 @@ class Model:
         self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.velo_v_max)
 
     def endConditionsMet(self):
-        if self.velo.positions[-1] == self.thes.positions[-1] :
+        if self.distance(self.velo.positions[-1], self.thes.positions[-1]) <= constants.reach : #self.velo.positions[-1] == self.thes.positions[-1] :
             return 2
         elif self.time >= constants.max_time:
             return 1
         return 0
+    
+    def distance(self, pos1, pos2) :
+        return np.sqrt(np.square(pos1[0]-pos2[0]) + np.square(pos1[1]-pos2[1]))
     
     def getInfo(self):
         return self.velo.getInfo() + self.thes.getInfo() + [self.time]
@@ -81,6 +85,8 @@ class Model:
         self.time += constants.time_step # increment time
 
 class Main:
+    velo_wins = 0
+    
     def runRound(self, predator, prey, trials) :
         for _ in range(trials):
             self.runTrial(predator, prey)
@@ -111,19 +117,25 @@ class Main:
             pred_predict = np.array(pred_predict).flatten()
             prey_predict = np.array(prey_predict).flatten()
             m.advanceModel(pred_predict, prey_predict)
+        past_info = np.array(past_info)
         if m.endConditionsMet() == 1 :
             # prey won
-            prey_mult = 1
-            pred_mult = -0.5
+            prey.train_on_batch(past_info, np.array(past_prey_preds))
+            predator.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
         elif m.endConditionsMet() == 2 :
             # predator won
-            pred_mult = 1
-            prey_mult = -0.5
+            self.velo_wins += 1
+            predator.train_on_batch(past_info, np.array(past_pred_preds))
+            prey.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
+        #past_info=np.array(past_info)
+        #predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
+        #prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
         
-        print(m.time)
-        past_info=np.array(past_info)
-        predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
-        prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
+    def getIdeal(self, len) :
+        res = []
+        for i in range(len) :
+            res.append([[1,0]])
+        return res
 
     def runMain(self, loadFile, saveFile, trials) :
        # print(tf._kernel_dir.)
@@ -137,7 +149,6 @@ class Main:
                 Dense(units=60, activation="relu"),
                 Dense(units=2, activation="tanh"),
             ])
-            print(predator.summary())
             
             prey = Sequential([
                 InputLayer(input_shape=constants.inp_size),
@@ -152,7 +163,9 @@ class Main:
             model = None
             
         self.runRound(predator, prey, trials)
-    
+        print("Velo wins: " + str(self.velo_wins))
+        print("Thes wins: " + str(trials - self.velo_wins))
+        
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
         prey_pos = np.array(prey.positions)
@@ -166,4 +179,4 @@ class Main:
         plt.show()
         
 main = Main()
-main.runMain(None,None,1)
+main.runMain(None,None,20)
