@@ -142,7 +142,7 @@ class Main:
         for i in range(len(past_info)-1) :
             last = past_info[i]
             next = past_info[i+1]
-            last_loc = 
+            last_loc = 0
             
             
 
