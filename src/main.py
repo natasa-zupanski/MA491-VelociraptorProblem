@@ -137,12 +137,19 @@ class Main:
             res.append([[1,0]])
         return res
     
-    def getIdeal(self, past_info) :
-        res = []
-        for i in range(len(past_info)-1) :
-            last = past_info[i]
-            next = past_info[i+1]
-            last_loc = 0
+    # def getIdeal(self, past_info) :
+    #     res = []
+    #     for i in range(len(past_info)-1) :
+    #         last = past_info[i]
+    #         next = past_info[i+1]
+    #         last_loc = [last[0], last[1]]
+    #         last_dir = last[4]
+    #         next_loc = [next[5], next[6]]
+            
+            
+            
+            
+            
             
             
 
