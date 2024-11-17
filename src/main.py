@@ -46,7 +46,7 @@ class Dinosaur:
         self.location[1] += turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))
         self.direction += dtheta
 
-        self.velocity = np.sqrt(self.turn_radius*self.acceleration)
+        self.velocity = np.sqrt(abs(self.turn_radius)*self.acceleration)
         
         self.velocity += self.acceleration*constants.time_step
         self.location[0] += self.velocity*constants.time_step*np.cos(self.direction)
@@ -94,6 +94,11 @@ class Main:
             self.runTrial(predator, prey)
     
     def runTrial(self, predator, prey):
+        predator.compile(optimizer='adam',
+              loss='categorical_crossentropy')
+        prey.compile(optimizer='adam',
+              loss='categorical_crossentropy')
+        
         m = Model(constants)
         past_info = []
         past_prey_preds = []
@@ -130,8 +135,8 @@ class Main:
             # predator won
             pred_mult = 1
             prey_mult = -0.5
-        predator.train_on_batch(past_info, pred_mult*past_pred_preds)
-        prey.train_on_batch(past_info, prey_mult*past_prey_preds)
+        predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
+        prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
 
     def runMain(self, loadFile, saveFile, trials) :
 
