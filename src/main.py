@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
 from tensorflow.python.keras import Sequential
@@ -18,7 +19,7 @@ constants = Constants()
 class Dinosaur:
     velocity = 0
     acceleration = 0
-    direction = np.pi/4
+    direction = 0
     turn_radius = 0
 
     def __init__(self, loc, tr_min, v_max):
@@ -41,7 +42,6 @@ class Dinosaur:
         turn_dir = np.sign(turn_radius)
         turn_radius = max(self.velocity**2/self.a_max,abs(turn_radius))
         dtheta = self.velocity*constants.time_step/turn_radius
-        #print(self.velocity,turn_radius,dtheta)
         loc = [self.positions[-1][0] + turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
                self.positions[-1][1] + turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
         self.positions.append(loc)
@@ -62,15 +62,14 @@ class Dinosaur:
 class Model:
     time = 0
 
-    def __init__(self, constants):
+    def __init__(self):
         self.velo = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
         self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.velo_v_max)
-        self.constants = constants
 
     def endConditionsMet(self):
         if self.distance(self.velo.positions[-1], self.thes.positions[-1]) <= constants.reach : #self.velo.positions[-1] == self.thes.positions[-1] :
             return 2
-        elif self.time >= self.constants.max_time:
+        elif self.time >= constants.max_time:
             return 1
         return 0
     
@@ -98,16 +97,15 @@ class Main:
         prey.compile(optimizer='adam',
               loss='categorical_crossentropy')
         
-        m = Model(constants)
+        m = Model()
         past_info = []
         past_prey_preds = []
         past_pred_preds = []
         prey_mult = 0
         pred_mult = 0
         while m.endConditionsMet() == 0:
-            info = m.getInfo()
-            info = [info]
-            info = np.array(info)
+            info = np.array([m.getInfo()])
+            print(info)
             info.reshape(constants.inp_size)
             info = tf.convert_to_tensor(np.array(info))
             past_info.append(info)
@@ -149,8 +147,6 @@ class Main:
             
 
     def runMain(self, loadFile, saveFile, trials) :
-
-        constants = Constants()
        # print(tf._kernel_dir.)
         
         if (loadFile == None or len(loadFile) == 0) :
@@ -178,6 +174,18 @@ class Main:
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
+        
+    def display_paths(self, predator, prey):
+        pred_pos = np.array(predator.positions)
+        prey_pos = np.array(prey.positions)
+
+        fig = plt.figure()
+        ax1 = fig.add_subplot(111)
+        
+        ax1.scatter(pred_pos[:,0],pred_pos[:,1], c='b', marker="o", label='predator')
+        ax1.scatter(prey_pos[:,0],prey_pos[:,1], c='r', marker="o", label='prey')
+        plt.legend(loc='upper left')
+        plt.show()
         
 main = Main()
 main.runMain(None,None,20)
