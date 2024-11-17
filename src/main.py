@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# import tensorflow as tf
-# from tensorflow.python.keras.layers import Dense, InputLayer
-# from tensorflow.python.keras import Sequential
+import tensorflow as tf
+from tensorflow.python.keras.layers import Dense, InputLayer
+from tensorflow.python.keras import Sequential
 
 class Constants:
     time_step = 0.01
@@ -156,30 +156,30 @@ class Main:
             
         self.runRound(predator, prey, trials)
         
-# main = Main()
-# main.runMain(None,None,1)
+main = Main()
+main.runMain(None,None,1)
 
-pred = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
-locations = np.zeros((305,2))
-pred.advance(3,0)
-locations[0,:] = pred.location
-for i in range(100):
-    pred.advance(0,.55)
-    locations[i+1,:] = pred.location
-pred.advance(10,0)
-locations[101,:] = pred.location
-pred.advance(-5,0)
-locations[102,:] = pred.location
-for i in range(100):
-    pred.advance(0,-.35)
-    locations[i+102,:] = pred.location
-pred.advance(10,0)
-locations[202,:] = pred.location
-pred.advance(-3,0)
-locations[203,:] = pred.location
-for i in range(100):
-    pred.advance(0,1)
-    locations[i+204,:] = pred.location
+# pred = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
+# locations = np.zeros((305,2))
+# pred.advance(3,0)
+# locations[0,:] = pred.location
+# for i in range(100):
+#     pred.advance(0,.55)
+#     locations[i+1,:] = pred.location
+# pred.advance(10,0)
+# locations[101,:] = pred.location
+# pred.advance(-5,0)
+# locations[102,:] = pred.location
+# for i in range(100):
+#     pred.advance(0,-.35)
+#     locations[i+102,:] = pred.location
+# pred.advance(10,0)
+# locations[202,:] = pred.location
+# pred.advance(-3,0)
+# locations[203,:] = pred.location
+# for i in range(100):
+#     pred.advance(0,1)
+#     locations[i+204,:] = pred.location
 
-plt.scatter(locations[:,0],locations[:,1])
-plt.show()
+# plt.scatter(locations[:,0],locations[:,1])
+# plt.show()
