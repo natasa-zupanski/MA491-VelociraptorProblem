@@ -7,7 +7,7 @@ from tensorflow.python.keras import Sequential
 class Constants:
     time_step = 0.01
     inp_size = (1, 11)
-    max_time = 0.02#15
+    max_time = 15
     velo_v_max = 60*1000/3600
     thes_v_max = 50*1000/3600
     velo_tr_min = 1.5
@@ -41,7 +41,7 @@ class Dinosaur:
         turn_dir = np.sign(turn_radius)
         turn_radius = max(self.velocity**2/self.a_max,abs(turn_radius))
         dtheta = self.velocity*constants.time_step/turn_radius
-        print(self.velocity,turn_radius,dtheta)
+        #print(self.velocity,turn_radius,dtheta)
         self.location[0] += turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir))
         self.location[1] += turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))
         self.direction += dtheta
@@ -80,7 +80,6 @@ class Model:
         self.velo.advance(velo_decision[0], velo_decision[1])
         self.thes.advance(thes_decision[0], thes_decision[1])
         self.time += constants.time_step # increment time
-        print(self.time)
 
 class Main:
     def runRound(self, predator, prey, trials) :
@@ -100,28 +99,20 @@ class Main:
         prey_mult = 0
         pred_mult = 0
         while m.endConditionsMet() == 0:
-
             info = m.getInfo()
             info = [info]
             info = np.array(info)
-            #info = np.transpose(info)
             info.reshape(constants.inp_size)
             info = tf.convert_to_tensor(np.array(info))
             past_info.append(info)
-            print(info)
-            print(info.shape)
             
-            #pred_predict = predator.predict(info)
-            #prey_predict = prey.predict(info)
             pred_predict = predator(info)
             past_pred_preds.append(pred_predict)
             prey_predict = prey(info)
             past_prey_preds.append(prey_predict)
-            print(pred_predict)
             pred_predict = np.array(pred_predict).flatten()
             prey_predict = np.array(prey_predict).flatten()
             m.advanceModel(pred_predict, prey_predict)
-        print(m.time)
         if m.endConditionsMet() == 1 :
             # prey won
             prey_mult = 1
@@ -130,6 +121,7 @@ class Main:
             # predator won
             pred_mult = 1
             prey_mult = -0.5
+        print(m.time)
         past_info=np.array(past_info)
         predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
         prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
