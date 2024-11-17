@@ -36,7 +36,7 @@ class Dinosaur:
         self.turn_radius = turn_radius
         self.velocity = max(min(self.velocity + self.acceleration*constants.time_step,self.v_max),0)
         if self.velocity == 0: # turn around
-            self.direction += np.pi
+            self.direction = np.mod(self.direction + np.pi,2*np.pi)
             return
 
         turn_dir = np.sign(turn_radius)
@@ -45,7 +45,7 @@ class Dinosaur:
         loc = [self.positions[-1][0] + turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
                self.positions[-1][1] + turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
         self.positions.append(loc)
-        self.direction += dtheta
+        self.direction = np.mod(self.direction + dtheta,2*np.pi)
         
     def model(self, X, hsize=[84, 60, 16]) :
         hs = []
