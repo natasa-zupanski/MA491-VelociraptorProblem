@@ -127,6 +127,8 @@ class Main:
             self.velo_wins += 1
             predator.train_on_batch(past_info, np.array(past_pred_preds))
             prey.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
+        self.display_paths(m.velo, m.thes)
+        
         #past_info=np.array(past_info)
         #predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
         #prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
@@ -137,7 +139,7 @@ class Main:
             res.append([[1,0]])
         return res
     
-    # def getIdeal(self, past_info) :
+    # def getIdeal2(self, past_info) :
     #     res = []
     #     for i in range(len(past_info)-1) :
     #         last = past_info[i]
@@ -181,7 +183,7 @@ class Main:
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
-        
+
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
         prey_pos = np.array(prey.positions)
