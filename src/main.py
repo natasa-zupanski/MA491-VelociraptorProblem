@@ -138,6 +138,15 @@ class Main:
         for i in range(len) :
             res.append([[1,0]])
         return res
+    
+    def getIdeal(self, past_info) :
+        res = []
+        for i in range(len(past_info)-1) :
+            last = past_info[i]
+            next = past_info[i+1]
+            last_loc = 
+            
+            
 
     def runMain(self, loadFile, saveFile, trials) :
 
