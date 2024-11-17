@@ -15,6 +15,8 @@ class Constants:
     velo_tr_min = 1.5
     thes_tr_min = 0.5
     reach = 0.8
+    a_max = 2
+    turn_max = 10000
     
 constants = Constants()
 
@@ -34,8 +36,9 @@ class Dinosaur:
         return [self.positions[-1][0], self.positions[-1][1], self.velocity, self.acceleration, self.direction]
     
     def advance(self, acceleration, turn_radius) :
-        self.acceleration = acceleration*self.a_max # acceleration is in [-1,1] range
-        self.turn_radius = turn_radius
+        self.acceleration = acceleration
+        self.acceleration = min(constants.a_max, max(-constants.a_max, self.acceleration))
+        self.turn_radius = turn_radius*1000
         self.velocity = max(min(self.velocity + self.acceleration*constants.time_step,self.v_max),0)
         if self.velocity == 0: # turn around
             self.direction += np.pi
@@ -88,6 +91,7 @@ class Model:
 
 class Main:
     velo_wins = 0
+    trial_count = 0
     
     def runRound(self, predator, prey, trials) :
         for i in range(trials):
@@ -108,20 +112,20 @@ class Main:
         past_prey_preds = []
         past_pred_preds = []
         while m.endConditionsMet() == 0:
-            info = np.array([m.getInfo()])
-            print(info)
-            info.reshape(constants.inp_size)
-            info = tf.convert_to_tensor(np.array(info))
+            info = [m.getInfo()]
+            #print(info)
+            #info.reshape(constants.inp_size)
+            info = tf.convert_to_tensor(info)
             past_info.append(info)
             
             pred_predict = predator(info)
             # if (random) :
             #     rands = np.random.uniform(low=-0.5, high=0.5, size=(2,))
             #     predict = pred_predict[0] + rands
+            #     predict[0] = min(1, max(-1, predict[0]))
+            #     predict[1] = min(1, max(-1, predict[1]))
             #     pred_predict = [predict]
-            #     pred_predict = np.min(pred_predict, 1)
-            #     pred_predict = np.max(pred_predict, -1)
-            print(pred_predict)
+            #print(pred_predict)
             past_pred_preds.append(pred_predict)
             prey_predict = prey(info)
             past_prey_preds.append(prey_predict)
@@ -131,14 +135,16 @@ class Main:
         past_info = np.array(past_info)
         if m.endConditionsMet() == 1 :
             # prey won
-            prey.train_on_batch(past_info, np.array(past_prey_preds))
-            predator.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
+            prey.train_on_batch(past_info, tf.convert_to_tensor(past_prey_preds))
+            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal2(past_info)))
         elif m.endConditionsMet() == 2 :
             # predator won
             self.velo_wins += 1
-            predator.train_on_batch(past_info, np.array(past_pred_preds))
-            prey.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
-        self.display_paths(m.velo, m.thes)
+            predator.train_on_batch(past_info, tf.convert_to_tensor(past_pred_preds))
+            prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal(len(past_info))))
+        self.trial_count += 1
+        if (self.trial_count % 10 == 0) :
+            self.display_paths(m.velo, m.thes)
         
         #past_info=np.array(past_info)
         #predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
@@ -147,17 +153,33 @@ class Main:
     def getIdeal(self, len) :
         res = []
         for i in range(len) :
-            res.append([[1,0]])
+            res.append([[constants.a_max,constants.turn_max]])
         return res
     
-    # def getIdeal2(self, past_info) :
-    #     res = []
-    #     for i in range(len(past_info)-1) :
-    #         last = past_info[i]
-    #         next = past_info[i+1]
-    #         last_loc = [last[0], last[1]]
-    #         last_dir = last[4]
-    #         next_loc = [next[5], next[6]]
+    def getIdeal2(self, past_info) :
+        print(len(past_info))
+        res = []
+        if (len(past_info) == 0) :
+            print("wtf")
+            return res
+        if (len(past_info) == 1) :
+            res.append([[constants.a_max,constants.turn_max]])
+            return res
+        for i in range(len(past_info)-1) :
+            last = past_info[i][0]
+            next = past_info[i+1][0]
+            last_loc = [last[0], last[1]]
+            last_dir = last[4]
+            next_loc = [next[5], next[6]]
+            v = (next_loc[0]-last_loc[0])/np.cos(last_dir)
+            yhat = last_loc[1] + v * np.sin(last_dir)
+            if abs(yhat - next_loc[1]) < (constants.reach * 2) :
+                res.append([[constants.a_max, constants.turn_max]])
+            else :
+                res.append([[constants.a_max, 0]])
+        res.append([[constants.a_max, 0]])
+        return res
+              
             
             
             
@@ -173,18 +195,18 @@ class Main:
             # create new model
             predator = Sequential([
                 InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size, activation="relu"),
-                Dense(units=84, activation="relu"),
-                Dense(units=60, activation="relu"),
-                Dense(units=2, activation="tanh"),
+                Dense(units=1, input_shape=constants.inp_size),
+                Dense(units=84),
+                Dense(units=60),
+                Dense(units=2),
             ])
             
             prey = Sequential([
                 InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size, activation="relu"),
-                Dense(units=84, activation="relu"),
-                Dense(units=60, activation="relu"),
-                Dense(units=2, activation="tanh"),
+                Dense(units=1, input_shape=constants.inp_size),
+                Dense(units=84),
+                Dense(units=60),
+                Dense(units=2),
             ])
 
         else :
@@ -208,4 +230,4 @@ class Main:
         plt.show()
         
 main = Main()
-main.runMain(None,None,20)
+main.runMain(None,None,100)
