@@ -4,6 +4,8 @@ import tensorflow as tf
 from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
 from tensorflow.python.keras import Sequential
 
+TF_ENABLE_ONEDNN_OPTS=0
+
 class Constants:
     time_step = 0.01
     inp_size = (1, 11)
@@ -31,7 +33,7 @@ class Dinosaur:
     def getInfo(self):
         return [self.positions[-1][0], self.positions[-1][1], self.velocity, self.acceleration, self.direction]
     
-    def advance(self, acceleration, turn_radius):
+    def advance(self, acceleration, turn_radius) :
         self.acceleration = acceleration*self.a_max # acceleration is in [-1,1] range
         self.turn_radius = turn_radius
         self.velocity = max(min(self.velocity + self.acceleration*constants.time_step,self.v_max),0)
@@ -88,21 +90,23 @@ class Main:
     velo_wins = 0
     
     def runRound(self, predator, prey, trials) :
-        for _ in range(trials):
-            self.runTrial(predator, prey)
+        for i in range(trials):
+            if i < 100 :
+                random = True
+            else :
+                random = False
+            self.runTrial(predator, prey, random)
     
-    def runTrial(self, predator, prey):
+    def runTrial(self, predator, prey, random):
         predator.compile(optimizer='adam',
-              loss='categorical_crossentropy')
+              loss='mse')
         prey.compile(optimizer='adam',
-              loss='categorical_crossentropy')
+              loss='mse')
         
         m = Model()
         past_info = []
         past_prey_preds = []
         past_pred_preds = []
-        prey_mult = 0
-        pred_mult = 0
         while m.endConditionsMet() == 0:
             info = np.array([m.getInfo()])
             print(info)
@@ -111,6 +115,13 @@ class Main:
             past_info.append(info)
             
             pred_predict = predator(info)
+            # if (random) :
+            #     rands = np.random.uniform(low=-0.5, high=0.5, size=(2,))
+            #     predict = pred_predict[0] + rands
+            #     pred_predict = [predict]
+            #     pred_predict = np.min(pred_predict, 1)
+            #     pred_predict = np.max(pred_predict, -1)
+            print(pred_predict)
             past_pred_preds.append(pred_predict)
             prey_predict = prey(info)
             past_prey_preds.append(prey_predict)
@@ -139,12 +150,19 @@ class Main:
             res.append([[1,0]])
         return res
     
-    def getIdeal2(self, past_info) :
-        res = []
-        for i in range(len(past_info)-1) :
-            last = past_info[i]
-            next = past_info[i+1]
-            last_loc = 0
+    # def getIdeal2(self, past_info) :
+    #     res = []
+    #     for i in range(len(past_info)-1) :
+    #         last = past_info[i]
+    #         next = past_info[i+1]
+    #         last_loc = [last[0], last[1]]
+    #         last_dir = last[4]
+    #         next_loc = [next[5], next[6]]
+            
+            
+            
+            
+            
             
             
 
