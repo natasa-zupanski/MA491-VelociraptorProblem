@@ -7,7 +7,7 @@ from tensorflow.python.keras import Sequential
 class Constants:
     time_step = 0.01
     inp_size = (1,1,11)
-    max_time = 0.1#15
+    max_time = 0.02#15
     velo_v_max = 60*1000/3600
     thes_v_max = 50*1000/3600
     velo_tr_min = 1.5
@@ -108,7 +108,7 @@ class Main:
         while m.endConditionsMet() == 0:
 
             info = m.getInfo()
-            past_info += info
+            past_info.append(info)
             info = [[info]]
             info = np.array(info)
             info.reshape(constants.inp_size)
@@ -135,8 +135,11 @@ class Main:
             # predator won
             pred_mult = 1
             prey_mult = -0.5
-        predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
-        prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
+        print(past_info)
+        print(past_pred_preds)
+        print(pred_mult*np.array(past_pred_preds))
+        predator.train_on_batch(np.array(past_info), pred_mult*np.array(past_pred_preds))
+        prey.train_on_batch(np.array(past_info), prey_mult*np.array(past_prey_preds))
 
     def runMain(self, loadFile, saveFile, trials) :
 
