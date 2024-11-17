@@ -119,18 +119,25 @@ class Main:
             pred_predict = np.array(pred_predict).flatten()
             prey_predict = np.array(prey_predict).flatten()
             m.advanceModel(pred_predict, prey_predict)
+        past_info = np.array(past_info)
         if m.endConditionsMet() == 1 :
             # prey won
-            prey_mult = 1
-            pred_mult = -0.5
+            prey.train_on_batch(past_info, np.array(past_prey_preds))
+            predator.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
         elif m.endConditionsMet() == 2 :
             # predator won
             self.velo_wins += 1
-            pred_mult = 1
-            prey_mult = -0.5
-        past_info=np.array(past_info)
-        predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
-        prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
+            predator.train_on_batch(past_info, np.array(past_pred_preds))
+            prey.train_on_batch(past_info, np.array(self.getIdeal(len(past_info))))
+        #past_info=np.array(past_info)
+        #predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
+        #prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
+        
+    def getIdeal(self, len) :
+        res = []
+        for i in range(len) :
+            res.append([[1,0]])
+        return res
 
     def runMain(self, loadFile, saveFile, trials) :
 
@@ -146,7 +153,6 @@ class Main:
                 Dense(units=60, activation="relu"),
                 Dense(units=2, activation="tanh"),
             ])
-            print(predator.summary())
             
             prey = Sequential([
                 InputLayer(input_shape=constants.inp_size),
