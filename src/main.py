@@ -45,12 +45,6 @@ class Dinosaur:
         self.location[0] += turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir))
         self.location[1] += turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))
         self.direction += dtheta
-
-        self.velocity = np.sqrt(abs(self.turn_radius)*self.acceleration)
-        
-        self.velocity += self.acceleration*constants.time_step
-        self.location[0] += self.velocity*constants.time_step*np.cos(self.direction)
-        self.location[1] += self.velocity*constants.time_step*np.sin(self.direction)
         
     def model(self, X, hsize=[84, 60, 16]) :
         hs = []
