@@ -86,6 +86,10 @@ class Main:
         print("H")
         m = Model(constants)
         past_info = []
+        past_prey_preds = []
+        past_pred_preds = []
+        prey_mult = 0
+        pred_mult = 0
         print("H")
         while not m.endConditionsMet() > 0:
             print("F")
@@ -101,13 +105,22 @@ class Main:
             
             #pred_predict = predator.predict(info)
             #prey_predict = prey.predict(info)
-            pred_logits, pred_predict = predator(info)
-            prey_logits, prey_predict = prey(info)
-            print(pred_logits)
-            print(prey_logits)
+            pred_predict = predator(info)
+            past_pred_preds.append(pred_predict)
+            prey_predict = prey(info)
+            past_prey_preds.append(prey_predict)
             print("M")
             m.advanceModel(pred_predict, prey_predict)
-                
+        if m.endConditionsMet() == 1 :
+            # prey won
+            prey_mult = 1
+            pred_mult = -0.5
+        elif m.endConditionsMet() == 2 :
+            # predator won
+            pred_mult = 1
+            prey_mult = -0.5
+        predator.train_on_batch(past_info, pred_mult*past_pred_preds)
+        prey.train_on_batch(past_info, prey_mult*past_prey_preds)
 
     def runMain(self, loadFile, saveFile, trials) :
 
