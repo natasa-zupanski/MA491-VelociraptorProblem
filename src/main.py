@@ -11,6 +11,7 @@ class Constants:
     thes_v_max = 50*1000/3600
     velo_tr_min = 1.5
     thes_tr_min = 0.5
+    reach = 0.8
     
 constants = Constants()
 
@@ -19,10 +20,9 @@ class Dinosaur:
     acceleration = 0
     direction = np.pi/4
     turn_radius = 0
-    positions = []
 
     def __init__(self, loc, tr_min, v_max):
-        self.positions.append(loc)
+        self.positions = [loc]
         self.tr_min = tr_min
         self.v_max = v_max
         self.a_max = v_max**2/tr_min
@@ -68,11 +68,14 @@ class Model:
         self.constants = constants
 
     def endConditionsMet(self):
-        if self.velo.positions[-1] == self.thes.positions[-1] :
+        if self.distance(self.velo.positions[-1], self.thes.positions[-1]) <= constants.reach : #self.velo.positions[-1] == self.thes.positions[-1] :
             return 2
         elif self.time >= self.constants.max_time:
             return 1
         return 0
+    
+    def distance(self, pos1, pos2) :
+        return np.sqrt(np.square(pos1[0]-pos2[0]) + np.square(pos1[1]-pos2[1]))
     
     def getInfo(self):
         return self.velo.getInfo() + self.thes.getInfo() + [self.time]
@@ -83,6 +86,8 @@ class Model:
         self.time += constants.time_step # increment time
 
 class Main:
+    velo_wins = 0
+    
     def runRound(self, predator, prey, trials) :
         for _ in range(trials):
             self.runTrial(predator, prey)
@@ -120,9 +125,9 @@ class Main:
             pred_mult = -0.5
         elif m.endConditionsMet() == 2 :
             # predator won
+            self.velo_wins += 1
             pred_mult = 1
             prey_mult = -0.5
-        print(m.time)
         past_info=np.array(past_info)
         predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
         prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
@@ -156,6 +161,8 @@ class Main:
             model = None
             
         self.runRound(predator, prey, trials)
+        print("Velo wins: " + str(self.velo_wins))
+        print("Thes wins: " + str(trials - self.velo_wins))
         
 main = Main()
-main.runMain(None,None,1)
+main.runMain(None,None,20)
