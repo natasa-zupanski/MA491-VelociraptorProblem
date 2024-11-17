@@ -1,12 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow.python.keras.layers import Dense, InputLayer
+from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
 from tensorflow.python.keras import Sequential
 
 class Constants:
     time_step = 0.01
-    inp_size = (1,1,11)
+    inp_size = (1, 11)
     max_time = 0.02#15
     velo_v_max = 60*1000/3600
     thes_v_max = 50*1000/3600
@@ -108,11 +108,12 @@ class Main:
         while m.endConditionsMet() == 0:
 
             info = m.getInfo()
-            past_info.append(info)
-            info = [[info]]
+            info = [info]
             info = np.array(info)
+            #info = np.transpose(info)
             info.reshape(constants.inp_size)
             info = tf.convert_to_tensor(np.array(info))
+            past_info.append(info)
             print(info)
             print(info.shape)
             
@@ -135,11 +136,9 @@ class Main:
             # predator won
             pred_mult = 1
             prey_mult = -0.5
-        print(past_info)
-        print(past_pred_preds)
-        print(pred_mult*np.array(past_pred_preds))
-        predator.train_on_batch(np.array(past_info), pred_mult*np.array(past_pred_preds))
-        prey.train_on_batch(np.array(past_info), prey_mult*np.array(past_prey_preds))
+        past_info=np.array(past_info)
+        predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
+        prey.train_on_batch(past_info, prey_mult*np.array(past_prey_preds))
 
     def runMain(self, loadFile, saveFile, trials) :
 
@@ -150,14 +149,17 @@ class Main:
             # create new model
             predator = Sequential([
                 InputLayer(input_shape=constants.inp_size),
-                Dense(units=84, input_dim=1, activation="relu"),
+                Dense(units=1, input_shape=constants.inp_size, activation="relu"),
+                Dense(units=84, activation="relu"),
                 Dense(units=60, activation="relu"),
                 Dense(units=2, activation="tanh"),
             ])
+            print(predator.summary())
             
             prey = Sequential([
                 InputLayer(input_shape=constants.inp_size),
-                Dense(units=84, input_dim=1, activation="relu"),
+                Dense(units=1, input_shape=constants.inp_size, activation="relu"),
+                Dense(units=84, activation="relu"),
                 Dense(units=60, activation="relu"),
                 Dense(units=2, activation="tanh"),
             ])
