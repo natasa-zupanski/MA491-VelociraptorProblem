@@ -16,7 +16,7 @@ class Constants:
 constants = Constants()
 
 class Dinosaur:
-    speed = 0
+    velocity = 0
     acceleration = 0
     direction = 0
     turn_radius = 0
@@ -31,11 +31,14 @@ class Dinosaur:
     
     def advance(self, acceleration, turn_radius):
         self.acceleration = acceleration
-        self.turn_radius = max(turn_radius,self.tr_min)
+        self.turn_radius = turn_radius
 
-        self.speed = np.sqrt(self.turn_radius*self.acceleration)
+        if turn_radius > self.tr_min:
+            max_velocity = self.v_max
+        elif turn_radius >= 0:
+            max_velocity = np.sqrt(self.v_max^2/self.tr_min*turn_radius)
         
-        self.speed += self.acceleration*self.constants.time_step
+        self.velocity = min(self.acceleration*self.constants.time_step,max_velocity)
         self.location[0] += self.velocity*self.constants.time_step*np.cos(self.direction)
         self.location[1] += self.velocity*self.constants.time_step*np.sin(self.direction)
         
