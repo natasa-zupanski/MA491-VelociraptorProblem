@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
 from tensorflow.python.keras import Sequential
@@ -20,15 +19,16 @@ class Dinosaur:
     acceleration = 0
     direction = np.pi/4
     turn_radius = 0
+    positions = []
 
     def __init__(self, loc, tr_min, v_max):
-        self.location = loc
+        self.positions.append(loc)
         self.tr_min = tr_min
         self.v_max = v_max
         self.a_max = v_max**2/tr_min
     
     def getInfo(self):
-        return [self.location[0], self.location[1], self.velocity, self.acceleration, self.direction]
+        return [self.positions[-1][0], self.positions[-1][1], self.velocity, self.acceleration, self.direction]
     
     def advance(self, acceleration, turn_radius):
         self.acceleration = acceleration*self.a_max # acceleration is in [-1,1] range
@@ -42,8 +42,9 @@ class Dinosaur:
         turn_radius = max(self.velocity**2/self.a_max,abs(turn_radius))
         dtheta = self.velocity*constants.time_step/turn_radius
         #print(self.velocity,turn_radius,dtheta)
-        self.location[0] += turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir))
-        self.location[1] += turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))
+        loc = [self.positions[-1][0] + turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
+               self.positions[-1][1] + turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
+        self.positions.append(loc)
         self.direction += dtheta
         
     def model(self, X, hsize=[84, 60, 16]) :
@@ -67,7 +68,7 @@ class Model:
         self.constants = constants
 
     def endConditionsMet(self):
-        if self.velo.location == self.thes.location :
+        if self.velo.positions[-1] == self.thes.positions[-1] :
             return 2
         elif self.time >= self.constants.max_time:
             return 1
@@ -158,28 +159,3 @@ class Main:
         
 main = Main()
 main.runMain(None,None,1)
-
-# pred = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
-# locations = np.zeros((305,2))
-# pred.advance(3,0)
-# locations[0,:] = pred.location
-# for i in range(100):
-#     pred.advance(0,.55)
-#     locations[i+1,:] = pred.location
-# pred.advance(10,0)
-# locations[101,:] = pred.location
-# pred.advance(-5,0)
-# locations[102,:] = pred.location
-# for i in range(100):
-#     pred.advance(0,-.35)
-#     locations[i+102,:] = pred.location
-# pred.advance(10,0)
-# locations[202,:] = pred.location
-# pred.advance(-3,0)
-# locations[203,:] = pred.location
-# for i in range(100):
-#     pred.advance(0,1)
-#     locations[i+204,:] = pred.location
-
-# plt.scatter(locations[:,0],locations[:,1])
-# plt.show()
