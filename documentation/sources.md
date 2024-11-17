@@ -12,3 +12,6 @@ https://www.youtube.com/watch?v=1y8RM4pzM0s
 
 [source 4](https://huggingface.co/learn/deep-rl-course/en/unit7/self-play)
 - ELO for training.
+
+[source 5](https://stackoverflow.com/questions/63471781/making-custom-activation-function-in-tensorflow-2-0)
+- example of custom activation function
