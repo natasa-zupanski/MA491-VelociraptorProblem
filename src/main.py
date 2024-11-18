@@ -17,7 +17,6 @@ class Constants:
     reach = 0.8
     a_max = 2
     turn_max = 10000
-    max_distance 
     
 constants = Constants()
 
@@ -70,7 +69,7 @@ class Model:
 
     def __init__(self):
         self.velo = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
-        self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.velo_v_max)
+        self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.thes_v_max)
 
     def endConditionsMet(self):
         if self.distance(self.velo.positions[-1], self.thes.positions[-1]) <= constants.reach : #self.velo.positions[-1] == self.thes.positions[-1] :
@@ -194,7 +193,7 @@ class Main:
             last_loc = [last[0], last[1]]
             next_loc = [next[5], next[6]]
             distance = np.sqrt(np.square(last_loc[0]-next_loc[0]) + np.square(last_loc[1]-next_loc[1]))
-            if (distance < constants.reach * 2) :
+            if distance < constants.reach * 2 :
                 res.append([[constants.a_max, 0]])
             else :
                 res.append([[constants.a_max, constants.turn_max]])
@@ -204,27 +203,27 @@ class Main:
     def runMain(self, loadFile, saveFile, trials) :
        # print(tf._kernel_dir.)
         
-        if (loadFile == None or len(loadFile) == 0) :
-            # create new model
-            predator = Sequential([
-                InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size),
-                Dense(units=84),
-                Dense(units=60),
-                Dense(units=2),
-            ])
+        # create new model
+        predator = Sequential([
+            InputLayer(input_shape=constants.inp_size),
+            Dense(units=1, input_shape=constants.inp_size),
+            Dense(units=84),
+            Dense(units=60),
+            Dense(units=2),
+        ])
             
-            prey = Sequential([
-                InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size),
-                Dense(units=84),
-                Dense(units=60),
-                Dense(units=2),
-            ])
+        prey = Sequential([
+            InputLayer(input_shape=constants.inp_size),
+            Dense(units=1, input_shape=constants.inp_size),
+            Dense(units=84),
+            Dense(units=60),
+            Dense(units=2),
+        ])
 
-        else :
+        if (loadFile != None) :
             # load old model
-            model = None
+            predator.load_weights("./pred_checks/my_checkpoint")
+            prey.load_weights("./prey_checks/my_checkpoint")
             
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
