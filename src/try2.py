@@ -14,7 +14,7 @@ def getMaxIndex(np_arr) :
     indices = np.where(np_arr == value)
     length = len(indices)
     if length == 1 :
-        return indices[0]
+        return indices[0][0]
     else :
         return np.random.randint(length)
     
@@ -162,14 +162,14 @@ class Main:
             past_prey_preds = getMaxOverResults(np.array(past_prey_preds))
             past_prey_preds = tf.convert_to_tensor(past_prey_preds)
             prey.train_on_batch(past_info, past_prey_preds)
-            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal(arr_info)))
+            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdealVelo(arr_info)))
         elif m.endConditionsMet() == 2 :
             # predator won
             self.velo_wins += 1
             past_pred_preds = getMaxOverResults(np.array(past_pred_preds))
             past_pred_preds = tf.convert_to_tensor(past_pred_preds)
             predator.train_on_batch(past_info, past_pred_preds)
-            prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal(arr_info)))
+            prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdealBase(past_prey_preds)))
     
         self.trial_count += 1
         if (self.trial_count % 10 == 0) :
@@ -180,6 +180,57 @@ class Main:
         for i in range(len(arr)) :
             res.append([[1,0,0,0]])
         return res  
+     
+    def getIdealBase(self, preds) : 
+        res = []
+        for i in range(len(preds)):
+            index = getMaxIndex(preds[i][0])
+            value = preds[i][0][index]
+            res_add = np.array(preds[i][0])
+            res_add[index] = 0
+            length = len(res_add)
+            redist = value / (length - 1)
+            for j in range(length) :
+                res_add[j] += redist
+            res_add[index] = 0
+            res.append([res_add])
+        return res
+    
+    def getIdealVelo(self, info) :
+        res = []
+        if (len(info) == 0) :
+            print("wtf")
+            return res
+        if (len(info) == 1) :
+            res.append([[1,0,0,0]])
+            return res
+        for i in range(len(info)-1) :
+            last = info[i][0]
+            next = info[i+1][0]
+            last_loc = [last[0], last[1]]
+            last_dir = last[4]
+            next_loc = [next[5], next[6]]
+            v = (next_loc[0]-last_loc[0])/np.cos(last_dir)
+            yhat = last_loc[1] + v * np.sin(last_dir)
+            diff = yhat - next_loc[1]
+            dir = np.sign(diff)
+            diff = abs(diff)
+            dist = distance(last_loc, next_loc)
+            can_run = last[2] * constants.time_step
+            if abs(diff) <= constants.reach:
+                res.append([[1,0,0,0]])
+            elif abs(diff) <= constants.reach*5 and dist >= 10 * can_run:
+                res.append([[1,0,0,0]])
+            elif abs(diff) <= constants.reach*3 and dist < 5*can_run:
+                res.append([[0,1,0,0]])
+            else :
+                if dir < 0 :
+                    res.append([[0,0,1,0]])
+                else :
+                    res.append([[0,0,0,1]])
+        res.append([[1,0,0,0]])
+        return res
+            
 
     def runMain(self, loadFile, saveFile, trials) :
         
@@ -214,8 +265,10 @@ class Main:
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
-        predator.save_weights("./pred_checks/my_pred2")
-        prey.save_weights("./prey_checks/my_prey2")
+        predator.save_weights("./pred_checks/" + saveFile + "_pred")
+        prey.save_weights("./prey_checks/" + saveFile + "_prey")
+        print(predator.get_weights())
+        print(prey.get_weights())
 
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
@@ -230,4 +283,4 @@ class Main:
         plt.show()
         
 main = Main()
-main.runMain(None,None,100)
+main.runMain(None,"Ideal3",100)
