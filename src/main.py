@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
 from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.models import load_model
 
 TF_ENABLE_ONEDNN_OPTS=0
 
@@ -114,6 +115,7 @@ class Main:
         past_info = []
         past_prey_preds = []
         past_pred_preds = []
+        #step = 0
         while m.endConditionsMet() == 0:
             info = [m.getInfo()]
             #print(info)
@@ -135,19 +137,28 @@ class Main:
             pred_predict = np.array(pred_predict).flatten()
             prey_predict = np.array(prey_predict).flatten()
             m.advanceModel(pred_predict, prey_predict)
+            # step += 1
+            # if step % 100 :
+            #     temp_info = np.array(past_info)
+            #     prey.train_on_batch(tf.convert_to_tensor(temp_info), tf.convert_to_tensor(self.getIdeal3(temp_info)))
+            #     predator.train_on_batch(tf.convert_to_tensor(temp_info), tf.convert_to_tensor(self.getIdeal2(temp_info)))
+
         past_info = np.array(past_info)
         if m.endConditionsMet() == 1 :
             # prey won
-            prey.train_on_batch(past_info, tf.convert_to_tensor(past_prey_preds))
-            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal2(past_info)))
+            prey.train_on_batch(tf.convert_to_tensor(past_info), tf.convert_to_tensor(past_prey_preds))
+            predator.train_on_batch(tf.convert_to_tensor(past_info), tf.convert_to_tensor(self.getIdeal2(past_info)))
         elif m.endConditionsMet() == 2 :
             # predator won
             self.velo_wins += 1
             predator.train_on_batch(past_info, tf.convert_to_tensor(past_pred_preds))
             prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal3(past_info)))
         self.trial_count += 1
-        if (self.trial_count % 10 == 0) :
+        if (self.trial_count % 50 == 0) :
             self.display_paths(m.velo, m.thes)
+            #predator.save_weights("./pred_checks/my_checkpoint", overwrite=True)
+            #prey.save_weights("./prey_checks/my_checkpoint", overwrite=True)
+
         
         #past_info=np.array(past_info)
         #predator.train_on_batch(past_info, pred_mult*np.array(past_pred_preds))
@@ -206,34 +217,41 @@ class Main:
     def runMain(self, loadFile, saveFile, trials) :
        # print(tf._kernel_dir.)
         
-        if (loadFile == None or len(loadFile) == 0) :
-            # create new model
-            predator = Sequential([
-                InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size),
-                Dense(units=84),
-                Dense(units=60),
-                Dense(units=2,activation=lambda x:tf.clip_by_value(x,-1,1)),
-            ])
+        # create new model
+        predator = Sequential([
+            InputLayer(input_shape=constants.inp_size),
+            #Dense(units=1, input_shape=constants.inp_size),
+            Dense(units=84, input_shape=constants.inp_size),
+            Dense(units=60),
+            Dense(units=2),
+        ])
+        predator.summary()
             
-            prey = Sequential([
-                InputLayer(input_shape=constants.inp_size),
-                Dense(units=1, input_shape=constants.inp_size),
-                Dense(units=84),
-                Dense(units=60),
-                Dense(units=2,activation=lambda x:tf.clip_by_value(x,-1,1)),
-            ])
+        prey = Sequential([
+            InputLayer(input_shape=constants.inp_size),
+            #Dense(units=1, input_shape=constants.inp_size),
+            Dense(units=84, input_shape=constants.inp_size),
+            Dense(units=60),
+            Dense(units=2),
+        ])
 
         if (loadFile != None) :
             # load old model
-            predator.load_weights("./pred_checks/my_checkpoint")
-            prey.load_weights("./prey_checks/my_checkpoint")
+            print("Loading")
+            predator.compile(optimizer='adam',
+              loss='mse')
+            prey.compile(optimizer='adam',
+              loss='mse')
+            predator.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
+            prey.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
+            predator = load_model("./pred_checks/my_pred.keras")
+            prey = load_model("./prey_checks/my_prey.keras")
             
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
-        predator.save_weights("./pred_checks/my_checkpoint")
-        prey.save_weights("./prey_checks/my_checkpoint")
+        predator.save("./pred_checks/my_pred.keras", save_format='tf')
+        prey.save("./prey_checks/my_prey.keras", save_format='tf')
 
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
@@ -242,8 +260,8 @@ class Main:
         fig = plt.figure()
         ax1 = fig.add_subplot(111)
         
-        ax1.scatter(pred_pos[:,0],pred_pos[:,1], c='b', marker="o", label='predator')
-        ax1.scatter(prey_pos[:,0],prey_pos[:,1], c='r', marker="o", label='prey')
+        ax1.plot(pred_pos[:,0],pred_pos[:,1], '.b-', label='predator')
+        ax1.plot(prey_pos[:,0],prey_pos[:,1], '.r-', label='prey')
         plt.legend(loc='upper left')
         plt.show()
         
