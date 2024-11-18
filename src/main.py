@@ -17,14 +17,14 @@ class Constants:
     reach = 0.8
     a_max = 2
     turn_max = 10000
-    max_distance 
+    precision = 10
     
 constants = Constants()
 
 class Dinosaur:
     velocity = 0
     acceleration = 0
-    direction = 0
+    direction = np.pi/2
     turn_radius = 0
 
     def __init__(self, loc, tr_min, v_max):
@@ -37,9 +37,8 @@ class Dinosaur:
         return [self.positions[-1][0], self.positions[-1][1], self.velocity, self.acceleration, self.direction]
     
     def advance(self, acceleration, turn_radius) :
-        self.acceleration = acceleration
-        self.acceleration = min(constants.a_max, max(-constants.a_max, self.acceleration))
-        self.turn_radius = turn_radius*1000
+        self.acceleration = acceleration*constants.a_max
+        self.turn_radius = turn_radius*constants.turn_max
         self.velocity = max(min(self.velocity + self.acceleration*constants.time_step,self.v_max),0)
         if self.velocity == 0: # turn around
             self.direction = np.mod(self.direction + np.pi,2*np.pi)
@@ -47,30 +46,33 @@ class Dinosaur:
 
         turn_dir = np.sign(turn_radius)
         self.turn_radius = max(self.velocity**2/self.a_max,abs(self.turn_radius))
-        dtheta = self.velocity*constants.time_step/self.turn_radius
-        loc = [self.positions[-1][0] + self.turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
-               self.positions[-1][1] + self.turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
-        self.positions.append(loc)
-        self.direction = np.mod(self.direction + dtheta,2*np.pi)
-        
-    def model(self, X, hsize=[84, 60, 16]) :
-        hs = []
-        for i in range(hsize.count) :
-            if (i == 0) :
-                h = Dense(X, hsize[i], actovation="relu")
-                hs += h
-            else:
-                h = Dense(hs[i-1], hsize[i], activation="relu")
-                hs += h
-        return hs[len(hs)-1], hs[len(hs)-2]
-        
+        if abs(self.turn_radius)/constants.turn_max <= .75:
+            dtheta = self.velocity*constants.time_step/self.turn_radius
+            loc = [np.round(self.positions[-1][0] + self.turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),constants.precision),
+                    np.round(self.positions[-1][1] + self.turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir)),constants.precision)]
+            self.positions.append(loc)
+            self.direction = np.mod(self.direction + dtheta,2*np.pi)
+        else:
+            loc = [np.round(self.positions[-1][0] + self.velocity*constants.time_step*np.cos(self.direction),constants.precision),
+                   np.round(self.positions[-1][1] + self.velocity*constants.time_step*np.sin(self.direction),constants.precision)]
+    
+    # def model(self, X, hsize=[84, 60, 16]) :
+    #     hs = []
+    #     for i in range(hsize.count) :
+    #         if (i == 0) :
+    #             h = Dense(X, hsize[i], activation="relu")
+    #             hs += h
+    #         else:
+    #             h = Dense(hs[i-1], hsize[i], activation="relu")
+    #             hs += h
+    #     return hs[len(hs)-1], hs[len(hs)-2]        
 
 class Model:
     time = 0
 
     def __init__(self):
         self.velo = Dinosaur([0,0],constants.velo_tr_min,constants.velo_v_max)
-        self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.velo_v_max)
+        self.thes = Dinosaur([0,15],constants.thes_tr_min,constants.thes_v_max)
 
     def endConditionsMet(self):
         if self.distance(self.velo.positions[-1], self.thes.positions[-1]) <= constants.reach : #self.velo.positions[-1] == self.thes.positions[-1] :
@@ -211,7 +213,7 @@ class Main:
                 Dense(units=1, input_shape=constants.inp_size),
                 Dense(units=84),
                 Dense(units=60),
-                Dense(units=2),
+                Dense(units=2,activation=lambda x:tf.clip_by_value(x,-1,1)),
             ])
             
             prey = Sequential([
@@ -219,7 +221,7 @@ class Main:
                 Dense(units=1, input_shape=constants.inp_size),
                 Dense(units=84),
                 Dense(units=60),
-                Dense(units=2),
+                Dense(units=2,activation=lambda x:tf.clip_by_value(x,-1,1)),
             ])
 
         else :
