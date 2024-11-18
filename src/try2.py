@@ -174,6 +174,7 @@ class Main:
         self.trial_count += 1
         if (self.trial_count % 10 == 0) :
             self.display_paths(m.velo, m.thes)
+            print(self.velo_wins)
         
     def getIdeal(self, arr) :
         res = []
