@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-from tensorflow.python.keras.layers import Dense, InputLayer, Flatten
+from tensorflow.python.keras.layers import Dense, InputLayer
 from tensorflow.python.keras import Sequential
 from tensorflow.python.keras.models import load_model
+
+from keras import __version__
+tf.keras.__version__ = __version__
 
 TF_ENABLE_ONEDNN_OPTS=0
 
@@ -18,7 +21,7 @@ class Constants:
     reach = 0.8
     a_max = 2
     turn_max = 10000
-    precision = 10
+    precision = 16
     
 constants = Constants()
 
@@ -167,7 +170,7 @@ class Main:
     def getIdeal(self, len) :
         res = []
         for i in range(len) :
-            res.append([[constants.a_max,constants.turn_max]])
+            res.append([[1,1]])
         return res
     
     def getIdeal2(self, past_info) :
@@ -177,7 +180,7 @@ class Main:
             print("wtf")
             return res
         if (len(past_info) == 1) :
-            res.append([[constants.a_max,constants.turn_max]])
+            res.append([[1,1]])
             return res
         for i in range(len(past_info)-1) :
             last = past_info[i][0]
@@ -188,10 +191,10 @@ class Main:
             v = (next_loc[0]-last_loc[0])/np.cos(last_dir)
             yhat = last_loc[1] + v * np.sin(last_dir)
             if abs(yhat - next_loc[1]) < (constants.reach * 3) :
-                res.append([[constants.a_max, constants.turn_max]])
+                res.append([[1, 1]])
             else :
-                res.append([[constants.a_max, 0]])
-        res.append([[constants.a_max, 0]])
+                res.append([[1, 0]])
+        res.append([[1, 0]])
         return res
     
     def getIdeal3(self, past_info) :
@@ -208,10 +211,10 @@ class Main:
             next_loc = [next[5], next[6]]
             distance = np.sqrt(np.square(last_loc[0]-next_loc[0]) + np.square(last_loc[1]-next_loc[1]))
             if distance < constants.reach * 2 :
-                res.append([[constants.a_max, 0]])
+                res.append([[1, 0]])
             else :
-                res.append([[constants.a_max, constants.turn_max]])
-        res.append([[constants.a_max, constants.turn_max]])
+                res.append([[1, 1]])
+        res.append([[1,1]])
         return res    
 
     def runMain(self, loadFile, saveFile, trials) :
@@ -223,7 +226,7 @@ class Main:
             #Dense(units=1, input_shape=constants.inp_size),
             Dense(units=84, input_shape=constants.inp_size),
             Dense(units=60),
-            Dense(units=2),
+            Dense(units=2, activation=lambda x:tf.clip_by_value(x,-1,1))
         ])
         predator.summary()
             
@@ -232,26 +235,29 @@ class Main:
             #Dense(units=1, input_shape=constants.inp_size),
             Dense(units=84, input_shape=constants.inp_size),
             Dense(units=60),
-            Dense(units=2),
+            Dense(units=2, activation=lambda x:tf.clip_by_value(x,-1,1))
         ])
 
         if (loadFile != None) :
             # load old model
             print("Loading")
+            # predator.build()
+            # prey.build()
             predator.compile(optimizer='adam',
               loss='mse')
             prey.compile(optimizer='adam',
               loss='mse')
-            predator.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
-            prey.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
-            predator = load_model("./pred_checks/my_pred.keras")
-            prey = load_model("./prey_checks/my_prey.keras")
+            #predator.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
+            #prey.train_on_batch(tf.convert_to_tensor([Model().getInfo()]), tf.convert_to_tensor([[constants.a_max, 0]]))
+            predator.load_weights('predator.h5')
+            prey.load_weights('prey.h5')
             
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
-        predator.save("./pred_checks/my_pred.keras", save_format='tf')
-        prey.save("./prey_checks/my_prey.keras", save_format='tf')
+        #!mkdir -p saved_model
+        predator.save_weights('predator.h5')
+        prey.save_weights('prey.h5')
 
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
@@ -266,4 +272,4 @@ class Main:
         plt.show()
         
 main = Main()
-main.runMain(None,None,100)
+main.runMain(None,None,1)
