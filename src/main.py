@@ -196,7 +196,7 @@ class Main:
             last_loc = [last[0], last[1]]
             next_loc = [next[5], next[6]]
             distance = np.sqrt(np.square(last_loc[0]-next_loc[0]) + np.square(last_loc[1]-next_loc[1]))
-            if (distance < constants.reach * 2) :
+            if distance < constants.reach * 2 :
                 res.append([[constants.a_max, 0]])
             else :
                 res.append([[constants.a_max, constants.turn_max]])
@@ -224,9 +224,10 @@ class Main:
                 Dense(units=2,activation=lambda x:tf.clip_by_value(x,-1,1)),
             ])
 
-        else :
+        if (loadFile != None) :
             # load old model
-            model = None
+            predator.load_weights("./pred_checks/my_checkpoint")
+            prey.load_weights("./prey_checks/my_checkpoint")
             
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
