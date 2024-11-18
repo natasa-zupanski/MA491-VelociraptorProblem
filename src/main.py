@@ -17,6 +17,7 @@ class Constants:
     reach = 0.8
     a_max = 2
     turn_max = 10000
+    max_distance 
     
 constants = Constants()
 
@@ -45,10 +46,10 @@ class Dinosaur:
             return
 
         turn_dir = np.sign(turn_radius)
-        turn_radius = max(self.velocity**2/self.a_max,abs(turn_radius))
-        dtheta = self.velocity*constants.time_step/turn_radius
-        loc = [self.positions[-1][0] + turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
-               self.positions[-1][1] + turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
+        self.turn_radius = max(self.velocity**2/self.a_max,abs(self.turn_radius))
+        dtheta = self.velocity*constants.time_step/self.turn_radius
+        loc = [self.positions[-1][0] + self.turn_radius*(np.sin(self.direction)*turn_dir+np.cos(self.direction-(dtheta-np.pi/2)*turn_dir)),
+               self.positions[-1][1] + self.turn_radius*(-1*np.cos(self.direction)*turn_dir+np.sin(self.direction-(dtheta-np.pi/2)*turn_dir))]
         self.positions.append(loc)
         self.direction = np.mod(self.direction + dtheta,2*np.pi)
         
@@ -141,7 +142,7 @@ class Main:
             # predator won
             self.velo_wins += 1
             predator.train_on_batch(past_info, tf.convert_to_tensor(past_pred_preds))
-            prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal(len(past_info))))
+            prey.train_on_batch(past_info, tf.convert_to_tensor(self.getIdeal3(past_info)))
         self.trial_count += 1
         if (self.trial_count % 10 == 0) :
             self.display_paths(m.velo, m.thes)
@@ -157,7 +158,7 @@ class Main:
         return res
     
     def getIdeal2(self, past_info) :
-        print(len(past_info))
+        #print(len(past_info))
         res = []
         if (len(past_info) == 0) :
             print("wtf")
@@ -173,20 +174,32 @@ class Main:
             next_loc = [next[5], next[6]]
             v = (next_loc[0]-last_loc[0])/np.cos(last_dir)
             yhat = last_loc[1] + v * np.sin(last_dir)
-            if abs(yhat - next_loc[1]) < (constants.reach * 2) :
+            if abs(yhat - next_loc[1]) < (constants.reach * 3) :
                 res.append([[constants.a_max, constants.turn_max]])
             else :
                 res.append([[constants.a_max, 0]])
         res.append([[constants.a_max, 0]])
         return res
-              
-            
-            
-            
-            
-            
-            
-            
+    
+    def getIdeal3(self, past_info) :
+        res = []
+        if (len(past_info) == 0) :
+            return res
+        if (len(past_info) == 1) :
+            res.append([[constants.a_max,constants.turn_max]])
+            return res
+        for i in range(len(past_info)-1) :
+            last = past_info[i][0]
+            next = past_info[i+1][0]
+            last_loc = [last[0], last[1]]
+            next_loc = [next[5], next[6]]
+            distance = np.sqrt(np.square(last_loc[0]-next_loc[0]) + np.square(last_loc[1]-next_loc[1]))
+            if (distance < constants.reach * 2) :
+                res.append([[constants.a_max, 0]])
+            else :
+                res.append([[constants.a_max, constants.turn_max]])
+        res.append([[constants.a_max, constants.turn_max]])
+        return res    
 
     def runMain(self, loadFile, saveFile, trials) :
        # print(tf._kernel_dir.)
@@ -216,6 +229,8 @@ class Main:
         self.runRound(predator, prey, trials)
         print("Velo wins: " + str(self.velo_wins))
         print("Thes wins: " + str(trials - self.velo_wins))
+        predator.save_weights("./pred_checks/my_checkpoint")
+        prey.save_weights("./prey_checks/my_checkpoint")
 
     def display_paths(self, predator, prey):
         pred_pos = np.array(predator.positions)
