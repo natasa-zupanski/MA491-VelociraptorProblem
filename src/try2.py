@@ -63,6 +63,17 @@ class Dinosaur:
     def getInfo(self):
         return [self.positions[-1][0], self.positions[-1][1], self.velocity, self.acceleration, self.direction]
     
+    def getTurningRadius(self) :
+        return (np.square(self.velocity)) / self.a_tr_max
+    
+    def getDTheta(self) :
+        distance = self.velocity * constants.time_step
+        turn_radius = self.getTurningRadius()
+        if turn_radius != 0 :
+            return distance/turn_radius
+        else :
+            return np.pi
+    
     def advance(self, choice) :
         if choice == 0 :
             # speed up
@@ -162,7 +173,7 @@ class Main:
             past_prey_preds = getMaxOverResults(np.array(past_prey_preds))
             past_prey_preds = tf.convert_to_tensor(past_prey_preds)
             prey.train_on_batch(past_info, past_prey_preds)
-            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdealVelo(arr_info)))
+            predator.train_on_batch(past_info, tf.convert_to_tensor(self.getIdealVelo2(arr_info, m.velo)))
         elif m.endConditionsMet() == 2 :
             # predator won
             self.velo_wins += 1
@@ -225,6 +236,41 @@ class Main:
             elif abs(diff) <= constants.reach*3 and dist < 5*can_run:
                 res.append([[0,1,0,0]])
             else :
+                if dir < 0 :
+                    res.append([[0,0,1,0]])
+                else :
+                    res.append([[0,0,0,1]])
+        res.append([[1,0,0,0]])
+        return res
+    
+    def getIdealVelo2(self, info, velo) :
+        res = []
+        if (len(info) == 0) :
+            print("wtf")
+            return res
+        if (len(info) == 1) :
+            res.append([[1,0,0,0]])
+            return res
+        for i in range(len(info)-1) :
+            last = info[i][0]
+            next = info[i+1][0]
+            last_loc = [last[0], last[1]]
+            last_dir = last[4]
+            next_loc = [next[5], next[6]]
+            v = (next_loc[0]-last_loc[0])/np.cos(last_dir)
+            yhat = last_loc[1] + v * np.sin(last_dir)
+            diff = yhat - next_loc[1]
+            dir = np.sign(diff)
+            diff = abs(diff)
+            dist = distance(last_loc, next_loc)
+            can_run = last[2] * constants.time_step
+            theta_diff = next[9] - last[4]
+            can_turn = velo.getDTheta()
+            if abs(diff) <= constants.reach:
+                res.append([[1,0,0,0]]) # only need to go straight
+            elif can_turn < theta_diff and can_run > dist and can_run < dist*2 : # if will pass and can't turn to catch, slow down
+                res.append([[0,1,0,0]])
+            else : #default to turn towards
                 if dir < 0 :
                     res.append([[0,0,1,0]])
                 else :

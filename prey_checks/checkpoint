@@ -1,2 +1,2 @@
-model_checkpoint_path: "my_prey2"
-all_model_checkpoint_paths: "my_prey2"
+model_checkpoint_path: "Ideal3_prey"
+all_model_checkpoint_paths: "Ideal3_prey"
