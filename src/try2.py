@@ -268,7 +268,7 @@ class Main:
             can_turn = velo.getDTheta()
             if abs(diff) <= constants.reach:
                 res.append([[1,0,0,0]]) # only need to go straight
-            elif can_turn < theta_diff and can_run > dist*2 and can_run < dist*2.5 : # if will pass and can't turn to catch, slow down
+            elif can_turn < theta_diff and can_run > dist*1 and can_run < dist*2 : # if will pass and can't turn to catch, slow down
                 res.append([[0,1,0,0]])
             else : #default to turn towards
                 if dir < 0 :
