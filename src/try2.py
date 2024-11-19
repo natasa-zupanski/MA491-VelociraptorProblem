@@ -268,13 +268,21 @@ class Main:
             can_turn = velo.getDTheta()
             if abs(diff) <= constants.reach:
                 res.append([[1,0,0,0]]) # only need to go straight
-            elif can_turn < theta_diff and can_run > dist and can_run < dist*2 : # if will pass and can't turn to catch, slow down
+            elif can_turn < theta_diff and can_run > dist*2 and can_run < dist*2.5 : # if will pass and can't turn to catch, slow down
                 res.append([[0,1,0,0]])
             else : #default to turn towards
                 if dir < 0 :
                     res.append([[0,0,1,0]])
                 else :
                     res.append([[0,0,0,1]])
+            
+            mutate = np.random.randint(500)
+            if (mutate == 0) :
+                index = np.random.randint(4)
+                new_res = np.zeros((1,4))
+                new_res[0][index] = 1
+                res[i] = new_res
+
         res.append([[1,0,0,0]])
         return res
             
@@ -330,4 +338,4 @@ class Main:
         plt.show()
         
 main = Main()
-main.runMain(None,"Ideal3",100)
+main.runMain(None,"Ideal4",1000)
